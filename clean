@@ -1,0 +1,72 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+%matplotlib inline
+
+coln=["Bank","ID","IS_SE","IIN","Residence","CrID","IntRate","How","Region","Summ","Summ1","Summ2","currency",
+     "repdate","status","goal","expl","nan"]         
+df = pd.read_csv('file.csv', names=coln, 
+                 delimiter=';',decimal=',',encoding='cp1251', error_bad_lines=False, low_memory=False) 
+
+df=df.iloc[1:]
+df=df.drop(['ID','IS_SE','CrID','repdate','nan','Summ1','Summ2'], axis=1)
+
+df['Summ'] = (df['Summ'].replace('\.','', regex=True).replace(',','.', regex=True).astype(float))
+df['IntRate'] = (df['IntRate'].replace('\.','', regex=True).replace(',','.', regex=True).astype(float))
+
+df=df[df['Summ'] <= 15000000]
+df=df[df['Summ']>=10000]
+df=df.dropna()
+
+err=df[df['IIN']=="''"]
+df=df[df['IIN']!="''"]
+
+df=df[df['IIN'].str[7]!='0']
+df=df[df['IIN'].str[7]!='9']
+df=df[df['IIN'].str[7]!='8']
+df=df[df['IIN'].str[7]!='7']
+df=df[df['IIN'].str[7]!='1']
+df=df[df['IIN'].str[7]!='2']
+
+df=df.reset_index(drop=True)
+
+gender=[]
+age=[]
+for i in range(len(df)):
+    if df['IIN'][i][7]=='3':
+        gender.append('Male')
+        a=120-int(df['IIN'][i][1]+df['IIN'][i][2])
+        age.append(a)
+    elif df['IIN'][i][7]=='4':
+        gender.append('Female')
+        a=120-int(df['IIN'][i][1]+df['IIN'][i][2])
+        age.append(a)
+    elif df['IIN'][i][7]=='5':
+        gender.append('Male')
+        a=20-int(df['IIN'][i][1]+df['IIN'][i][2])
+        age.append(a)
+    else:
+        gender.append('Female')
+        a=20-int(df['IIN'][i][1]+df['IIN'][i][2])
+        age.append(a)
+  
+df['Gender']=gender
+df['Age']=age
+
+df=df.reset_index(drop=True)
+df=df[df['Age']>=18]
+df=df.reset_index(drop=True)
+
+res=[]
+for i in range(len(df)):
+    if df['Residence'][i]=="'Казахстан'":
+        res.append('Local')
+    else:
+        res.append('Foreigner')
+       
+df['Resid']=res
+
+df=df.drop(['IIN','Residence','IIN_length'], axis=1)
+
+df.to_csv('df.csv',index=False)
